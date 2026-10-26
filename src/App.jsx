@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { registerPlayer, resetRun, saveLevel } from "./lib/store";
 import Header from "./components/Header";
 import JumpMenu from "./components/JumpMenu";
 import Loader from "./components/Loader";
@@ -11,10 +12,13 @@ import Blend from "./components/Blend";
 import Hunt from "./components/Hunt";
 import LevelComplete from "./components/LevelComplete";
 import Final from "./components/Final";
+import AdminLogin from "./components/AdminLogin";
+import Admin from "./components/Admin";
 
 const ORDER = ["quiz", "blend", "hunt"];
 const START = { quiz: 0, blend: 0, hunt: 0 };
 const PRE = ["loading", "age", "otp"]; // screens before the game: no header / jump menu
+const ADMIN = ["adminLogin", "admin"]; // admin screens: no jump menu
 
 export default function App() {
   const [screen, setScreen] = useState("loading");
@@ -23,8 +27,11 @@ export default function App() {
   const [run, setRun] = useState(0);
   const [aged, setAged] = useState(false); // set once login + OTP are done; unlocks the Jump menu levels
   const [user, setUser] = useState(null); // { name, city, mobile }
+  const [playerId, setPlayerId] = useState(null); // id of this player in the admin store
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const finish = (key) => (r) => {
+    if (playerId) saveLevel(playerId, key, r.score);
     setScores((s) => ({ ...s, [key]: r.score }));
     setResult({ ...r, key });
     setScreen("complete");
@@ -34,6 +41,7 @@ export default function App() {
     setScreen(i + 1 < ORDER.length ? ORDER[i + 1] : "final");
   };
   const restart = () => {
+    if (playerId) resetRun(playerId);
     setScores(START);
     setRun((n) => n + 1);
     setScreen("welcome");
@@ -46,6 +54,7 @@ export default function App() {
     setScreen("otp");
   };
   const verified = () => {
+    if (user) setPlayerId(registerPlayer(user)); // shows up in the admin Registrations tab
     setAged(true);
     setScreen("welcome");
   }; // OTP passed
@@ -63,8 +72,18 @@ export default function App() {
   const total = scores.quiz + scores.blend + scores.hunt;
   const base = total - (scores[screen] ?? 0); // total of the OTHER levels, so a level's live total never double-counts its own old score
   const current = screen === "complete" ? result.key : screen;
+  const openAdmin = () => setScreen(isAdmin ? "admin" : "adminLogin");
   const jump = (align) => (
-    <JumpMenu current={current} aged={aged} onJump={jumpTo} align={align} />
+    <div className="flex items-center gap-2">
+      <JumpMenu current={current} aged={aged} onJump={jumpTo} align={align} />
+      <button
+        type="button"
+        onClick={openAdmin}
+        className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
+      >
+        ADMIN
+      </button>
+    </div>
   );
 
   const fit = screen === "welcome"; // Welcome fits the screen exactly, with no scrolling
@@ -77,6 +96,7 @@ export default function App() {
     "hunt",
     "complete",
     "final",
+    "admin",
   ].includes(screen); // full-width desktop layout
 
   return (
@@ -89,7 +109,8 @@ export default function App() {
         {level > 0 ? (
           <Header level={level} total={total} jump={jump("left")} />
         ) : (
-          !PRE.includes(screen) && (
+          !PRE.includes(screen) &&
+          !ADMIN.includes(screen) && (
             <div className="relative z-30 flex justify-end pb-2">
               {jump("right")}
             </div>
@@ -104,6 +125,24 @@ export default function App() {
             mobile={user?.mobile}
             onVerified={verified}
             onBack={() => setScreen("login")}
+          />
+        )}
+        {screen === "adminLogin" && (
+          <AdminLogin
+            onSuccess={() => {
+              setIsAdmin(true);
+              setScreen("admin");
+            }}
+            onBack={() => setScreen(aged ? "welcome" : "login")}
+          />
+        )}
+        {screen === "admin" && (
+          <Admin
+            onBack={() => setScreen(aged ? "welcome" : "login")}
+            onLogout={() => {
+              setIsAdmin(false);
+              setScreen(aged ? "welcome" : "login");
+            }}
           />
         )}
         {screen === "welcome" && <Welcome onStart={start} user={user} />}
