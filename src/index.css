@@ -4,12 +4,47 @@
 body {
   @apply bg-maroon text-cream font-serif select-none;
 }
+
+html {
+  scrollbar-width: none; /* Firefox */
+}
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
 .btn-gold {
   @apply font-display text-xl tracking-wide rounded-lg bg-gradient-to-b from-gold to-amber-600 text-maroon px-7 py-3.5 shadow-lg active:scale-95 transition disabled:opacity-40 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white;
 }
 .btn-ghost {
   @apply font-display tracking-wide rounded-lg border-2 border-gold/70 text-gold px-4 py-2 active:scale-95 transition;
 }
+
+/* Full-project background: desktop image on wide screens, mobile image on phones */
+.app-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: #1a0305; /* shown until the image loads */
+}
+.app-bg::before {
+  content: "";
+  position: fixed;
+  inset: -24px; /* extends past the screen so the blurred edges don't show */
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(20, 2, 4, 0.55), rgba(20, 2, 4, 0.55)),
+    url("./assets/mobile.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(6px);
+}
+@media (min-width: 768px) {
+  .app-bg::before {
+    background-image:
+      linear-gradient(rgba(20, 2, 4, 0.55), rgba(20, 2, 4, 0.55)),
+      url("./assets/desktop.png");
+  }
+}
+
 /* Quiz surfaces */
 .glass-card {
   background: linear-gradient(
@@ -38,4 +73,71 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Welcome page effects */
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+@keyframes spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spark {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(-16px) scale(1);
+  }
+}
+@keyframes shine {
+  0% {
+    transform: translateX(-140%) skewX(-20deg);
+  }
+  55%,
+  100% {
+    transform: translateX(300%) skewX(-20deg);
+  }
+}
+.title-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    #c98a1c 0%,
+    #fde9a6 25%,
+    #f5b82e 45%,
+    #fff6cf 50%,
+    #f5b82e 55%,
+    #c98a1c 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+.spin-slow {
+  animation: spinSlow 9s linear infinite;
+}
+.spark {
+  animation: spark 3.6s ease-in-out infinite;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: shine 3.2s ease-in-out infinite;
 }

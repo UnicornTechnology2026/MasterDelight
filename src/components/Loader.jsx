@@ -6,8 +6,20 @@ import horse from "../assets/horse.png";
 import tagline from "../assets/tagline.png";
 import scene from "../assets/scene.jpg";
 import mini from "../assets/mini-bottle.png";
+import ageBadge from "../assets/age-badge.png";
+import desktopBg from "../assets/desktop.png";
+import mobileBg from "../assets/mobile.png";
 
-const ASSETS = [bottleImg, logo, horse, tagline, scene, mini]; // preloaded while the bottle fills
+const ASSETS = [
+  bottleImg,
+  logo,
+  horse,
+  tagline,
+  scene,
+  mini,
+  desktopBg,
+  mobileBg,
+];
 const MIN_MS = 2800; // the bottle never fills faster than this, so the animation is always seen
 const HOLD_MS = 800; // pause on the full bottle before moving on
 const MSGS = [

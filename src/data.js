@@ -3,18 +3,7 @@
 export const QUESTIONS = [
   {
     q: "Which animal is the Masters Delight emblem?",
-    img: "horse",
     a: ["Horse", "Lion", "Tiger", "Eagle"],
-  },
-  {
-    q: "What does this tagline say?",
-    img: "tagline",
-    a: [
-      "Har Master Ke Liye",
-      "Har Din Master",
-      "Master Ka Jalwa",
-      "Sab Master Ke Liye",
-    ],
   },
   {
     q: "Complete the tagline: “Har Master Ke ___”",

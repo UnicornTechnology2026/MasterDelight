@@ -3,6 +3,8 @@ import Header from "./components/Header";
 import JumpMenu from "./components/JumpMenu";
 import Loader from "./components/Loader";
 import AgeGate from "./components/AgeGate";
+import Login from "./components/Login";
+import Otp from "./components/Otp";
 import Welcome from "./components/Welcome";
 import Quiz from "./components/Quiz";
 import Blend from "./components/Blend";
@@ -12,13 +14,15 @@ import Final from "./components/Final";
 
 const ORDER = ["quiz", "blend", "hunt"];
 const START = { quiz: 0, blend: 0, hunt: 0 };
+const PRE = ["loading", "age", "otp"]; // screens before the game: no header / jump menu
 
 export default function App() {
   const [screen, setScreen] = useState("loading");
   const [scores, setScores] = useState(START);
   const [result, setResult] = useState(null);
   const [run, setRun] = useState(0);
-  const [aged, setAged] = useState(false); // set once the age gate screen is passed; unlocks the Jump menu levels
+  const [aged, setAged] = useState(false); // set once login + OTP are done; unlocks the Jump menu levels
+  const [user, setUser] = useState(null); // { name, city, mobile }
 
   const finish = (key) => (r) => {
     setScores((s) => ({ ...s, [key]: r.score }));
@@ -35,10 +39,17 @@ export default function App() {
     setScreen("welcome");
   };
   const start = () => setScreen("quiz");
-  const enter = () => {
+
+  const enter = () => setScreen("login"); // age gate passed
+  const login = (details) => {
+    setUser(details);
+    setScreen("otp");
+  };
+  const verified = () => {
     setAged(true);
     setScreen("welcome");
-  }; // age gate passed
+  }; // OTP passed
+
   // Jump straight to any page. Bumping `run` remounts the page, so a level always starts fresh.
   const jumpTo = (target) => {
     setRun((n) => n + 1);
@@ -55,22 +66,38 @@ export default function App() {
     <JumpMenu current={current} aged={aged} onJump={jumpTo} align={align} />
   );
 
+  const fit = screen === "welcome"; // Welcome fits the screen exactly, with no scrolling
+  const deskFit = screen === "blend" || screen === "quiz";
+  const wide = ["welcome", "quiz", "blend"].includes(screen); // full-width desktop layout
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-maroon via-wine to-maroon">
-      <main className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-3">
+    <div
+      className={`app-bg ${fit ? "h-dvh overflow-hidden" : deskFit ? "min-h-dvh lg:h-dvh lg:overflow-hidden" : "min-h-dvh"}`}
+    >
+      <main
+        className={`mx-auto flex flex-col px-4 py-3 lg:px-10 ${fit ? "h-dvh" : deskFit ? "min-h-dvh lg:h-dvh" : "min-h-dvh"} ${wide ? "max-w-7xl" : "max-w-md"}`}
+      >
         {level > 0 ? (
           <Header level={level} total={total} jump={jump("left")} />
         ) : (
-          screen !== "loading" &&
-          screen !== "age" && (
+          !PRE.includes(screen) && (
             <div className="relative z-30 flex justify-end pb-2">
               {jump("right")}
             </div>
           )
         )}
+
         {screen === "loading" && <Loader onDone={() => setScreen("age")} />}
         {screen === "age" && <AgeGate onEnter={enter} />}
-        {screen === "welcome" && <Welcome onStart={start} />}
+        {screen === "login" && <Login onSubmit={login} initial={user} />}
+        {screen === "otp" && (
+          <Otp
+            mobile={user?.mobile}
+            onVerified={verified}
+            onBack={() => setScreen("login")}
+          />
+        )}
+        {screen === "welcome" && <Welcome onStart={start} user={user} />}
         {screen === "quiz" && <Quiz key={run} onDone={finish("quiz")} />}
         {screen === "blend" && <Blend key={run} onDone={finish("blend")} />}
         {screen === "hunt" && (

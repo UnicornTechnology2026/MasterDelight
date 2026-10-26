@@ -23,42 +23,43 @@ export default function AgeGate({ onEnter }) {
   }, []);
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-5">
-      <div className="w-full animate-rise drop-shadow-[0_18px_40px_rgba(0,0,0,.6)]">
-        <section
-          aria-labelledby="age-title"
-          className="age-frame age-edge p-[2px]"
-        >
-          <div
-            className="age-frame age-panel px-5 pb-12 pt-10 text-center"
-            style={{ "--c": "23px" }}
-          >
+    <div className="flex flex-1 flex-col items-center justify-center gap-4">
+      {/* Rectangle badge: red outer edge > white ring > deep red panel */}
+      <section
+        aria-labelledby="age-title"
+        className="w-full animate-rise rounded-2xl bg-[#d9141a] p-[3px] drop-shadow-[0_18px_40px_rgba(0,0,0,.6)]"
+      >
+        <div className="rounded-[0.9rem] bg-white p-[4px]">
+          <div className="rounded-[0.7rem] bg-[radial-gradient(ellipse_at_30%_20%,#c0141a_0%,#a31017_55%,#8e0d13_100%)] px-5 pb-8 pt-8 text-center shadow-[inset_0_0_40px_rgba(0,0,0,.25)]">
             <h1
               id="age-title"
-              className="font-head text-[clamp(19px,6vw,28px)] font-medium leading-[1.25] tracking-[.03em] text-[#f3d28a]"
+              className="bg-gradient-to-b from-[#fde9a6] via-[#f2bf4a] to-[#c98a1c] bg-clip-text font-head text-[clamp(26px,8.5vw,40px)] font-semibold uppercase leading-[1.1] text-transparent drop-shadow-[0_2px_2px_rgba(60,0,0,.55)]"
             >
-              I’M OF
+              I’m of
               <br />
-              LEGAL DRINKING AGE
+              Legal Drinking Age
             </h1>
-            <p className="mx-auto mt-5 max-w-[19rem] font-body text-[15px] leading-relaxed text-white/95">
+            <p className="mx-auto mt-5 max-w-[21rem] font-body text-[clamp(14px,4.2vw,18px)] leading-snug text-white">
               By entering this site, you agree to our terms &amp; conditions,
               privacy policy and other directives.
             </p>
+
+            {/* Enter button inside the box */}
             <button
               type="button"
               autoFocus
               onClick={go}
-              className="mx-auto mt-7 grid h-14 w-48 place-items-center rounded-full border border-[#f3d28a]/70 font-head text-2xl font-semibold text-[#d8ad5a] transition hover:bg-[#f3d28a]/10 hover:shadow-[0_0_22px_rgba(243,210,138,.35)] active:scale-95 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white"
+              className="mx-auto mt-6 grid h-12 w-44 place-items-center rounded-md border-2 border-[#f3d28a] bg-gradient-to-b from-[#fde9a6] via-[#f2bf4a] to-[#c98a1c] font-head text-xl font-semibold uppercase tracking-wider text-[#5a0a0e] shadow-[0_6px_16px_rgba(0,0,0,.45)] transition hover:brightness-110 active:scale-95 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white"
             >
               Enter
             </button>
-            <p className="mt-3 hidden font-body text-[11px] uppercase tracking-[.2em] text-white/60 [@media(hover:hover)]:block">
+            <p className="mt-3 hidden font-body text-[10px] uppercase tracking-[.2em] text-white/60 [@media(hover:hover)]:block">
               or press Enter ↵
             </p>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
       <p className="text-[10px] opacity-60">
         Please drink responsibly. For adults of legal drinking age only.
       </p>
