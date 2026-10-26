@@ -61,6 +61,7 @@ export default function App() {
       ? ORDER.indexOf(result.key) + 1
       : ORDER.indexOf(screen) + 1;
   const total = scores.quiz + scores.blend + scores.hunt;
+  const base = total - (scores[screen] ?? 0); // total of the OTHER levels, so a level's live total never double-counts its own old score
   const current = screen === "complete" ? result.key : screen;
   const jump = (align) => (
     <JumpMenu current={current} aged={aged} onJump={jumpTo} align={align} />
@@ -68,8 +69,15 @@ export default function App() {
 
   const fit = screen === "welcome"; // Welcome fits the screen exactly, with no scrolling
   const deskFit = screen === "blend" || screen === "quiz";
-  const huntFit = screen === "hunt"; // Hunt fills the screen exactly, scene sits inside the layout
-  const wide = ["welcome", "quiz", "blend", "hunt"].includes(screen); // full-width desktop layout
+  const huntFit = ["hunt", "complete", "final"].includes(screen); // these screens fill the screen exactly
+  const wide = [
+    "welcome",
+    "quiz",
+    "blend",
+    "hunt",
+    "complete",
+    "final",
+  ].includes(screen); // full-width desktop layout
 
   return (
     <div
@@ -99,14 +107,22 @@ export default function App() {
           />
         )}
         {screen === "welcome" && <Welcome onStart={start} user={user} />}
-        {screen === "quiz" && <Quiz key={run} onDone={finish("quiz")} />}
-        {screen === "blend" && <Blend key={run} onDone={finish("blend")} />}
-        {screen === "hunt" && <Hunt key={run} onDone={finish("hunt")} />}
+        {screen === "quiz" && (
+          <Quiz key={run} onDone={finish("quiz")} base={base} />
+        )}
+        {screen === "blend" && (
+          <Blend key={run} onDone={finish("blend")} base={base} />
+        )}
+        {screen === "hunt" && (
+          <Hunt key={run} onDone={finish("hunt")} base={base} />
+        )}
         {screen === "complete" && (
           <LevelComplete
             result={result}
             onNext={next}
             last={result.key === "hunt"}
+            level={level}
+            total={total}
           />
         )}
         {screen === "final" && <Final scores={scores} onRestart={restart} />}

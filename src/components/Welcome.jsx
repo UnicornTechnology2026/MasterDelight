@@ -6,7 +6,7 @@ const delay = (ms) => ({ animationDelay: `${ms}ms` });
 export default function Welcome({ onStart, user }) {
   const first = user?.name?.trim().split(" ")[0];
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(10px,2.6vh,24px)] overflow-hidden py-2 text-center">
+    <div className="-mt-24 flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(10px,2.6vh,24px)] overflow-hidden py-2 text-center">
       <img
         src={logo}
         alt="Masters Delight"
@@ -41,9 +41,6 @@ export default function Welcome({ onStart, user }) {
         style={delay(200)}
       >
         The Master’s Journey
-        <span className="block bg-gradient-to-r from-[#fff1b8] via-[#f0cf7a] to-[#b08420] bg-clip-text text-transparent [text-shadow:none]">
-          A Smooth Blend
-        </span>
       </h1>
 
       {/* Info + button */}
@@ -82,10 +79,6 @@ export default function Welcome({ onStart, user }) {
           Begin the Journey
         </button>
       </div>
-
-      <p className="animate-rise text-[10px] opacity-60" style={delay(500)}>
-        Please drink responsibly. For adults of legal drinking age only.
-      </p>
     </div>
   );
 }
