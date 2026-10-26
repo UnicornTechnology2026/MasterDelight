@@ -1,0 +1,354 @@
+import { useCallback, useEffect, useState } from "react";
+import horse from "../assets/horse.png";
+import tagline from "../assets/tagline.png";
+import { QUESTIONS } from "../data";
+import { shuffle } from "../lib/shuffle";
+
+// ---- Tunables -------------------------------------------------------------
+const IMG = { horse, tagline };
+const TIME = 15; // seconds per question
+const COUNT = 5; // questions per run
+const NEXT_DELAY = 1400; // ms the feedback stays on screen
+const POINTS = 100;
+const LETTERS = ["A", "B", "C", "D"];
+const CHEERS = [
+  "Wah, Master!",
+  "Spot on!",
+  "Sharp mind!",
+  "Master class!",
+  "Bilkul sahi!",
+];
+const R = 26,
+  CIRC = 2 * Math.PI * R;
+
+const pick = () =>
+  shuffle(QUESTIONS)
+    .slice(0, COUNT)
+    .map((q) => ({
+      ...q,
+      opts: shuffle(q.a.map((t, i) => ({ t, ok: i === 0 }))),
+    }));
+const buzz = (p) => {
+  try {
+    navigator.vibrate?.(p);
+  } catch {
+    /* not supported */
+  }
+};
+
+// ---- Small pieces ---------------------------------------------------------
+const Flame = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12 2c.5 3.2-1.6 4.8-3.2 6.7C7.2 10.5 6 12.3 6 14.8A6 6 0 0 0 18 15c0-2.2-.9-3.7-2-5 .1 1.6-.4 2.6-1.3 3.2.6-3.5-.4-7.6-2.7-11.2Z" />
+  </svg>
+);
+const Check = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-5 w-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </svg>
+);
+const Cross = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-5 w-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3.2"
+    strokeLinecap="round"
+  >
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+// Gold sparkle burst, anchored near the right edge of the correct answer.
+const Sparks = () => (
+  <span
+    className="pointer-events-none absolute right-6 top-1/2"
+    aria-hidden="true"
+  >
+    {Array.from({ length: 14 }, (_, k) => {
+      const a = (k / 14) * Math.PI * 2,
+        d = 42 + (k % 3) * 18;
+      return (
+        <i
+          key={k}
+          className="absolute h-2 w-2 animate-spark rounded-full bg-gold shadow-[0_0_8px_#f5b82e]"
+          style={{
+            "--dx": `${Math.cos(a) * d}px`,
+            "--dy": `${Math.sin(a) * d}px`,
+            animationDelay: `${(k % 4) * 30}ms`,
+          }}
+        />
+      );
+    })}
+  </span>
+);
+
+// Circular countdown. Re-mounted for every question so it always starts full.
+function TimerRing({ left, frozen }) {
+  const danger = left <= 5;
+  return (
+    <div
+      className={`relative grid h-16 w-16 place-items-center rounded-full bg-maroon shadow-[0_0_0_4px_rgba(74,5,8,1),0_6px_16px_rgba(0,0,0,.5)] ${danger && !frozen ? "animate-tick" : ""}`}
+    >
+      <svg viewBox="0 0 64 64" className="absolute inset-0 -rotate-90">
+        <circle
+          cx="32"
+          cy="32"
+          r={R}
+          fill="none"
+          stroke="rgba(245,184,46,.18)"
+          strokeWidth="5"
+        />
+        <circle
+          cx="32"
+          cy="32"
+          r={R}
+          fill="none"
+          strokeWidth="5"
+          strokeLinecap="round"
+          stroke={danger ? "#f87171" : "#f5b82e"}
+          strokeDasharray={CIRC}
+          strokeDashoffset={CIRC * (1 - Math.max(left, 0) / TIME)}
+          style={{
+            transition: "stroke-dashoffset 1s linear, stroke .3s",
+            filter: `drop-shadow(0 0 4px ${danger ? "#f87171" : "#f5b82e"})`,
+          }}
+        />
+      </svg>
+      <b
+        className={`relative font-display text-2xl leading-none ${danger ? "text-red-400" : "text-gold"}`}
+      >
+        {Math.max(left, 0)}
+      </b>
+    </div>
+  );
+}
+
+// ---- Main screen ----------------------------------------------------------
+export default function Quiz({ onDone }) {
+  const [qs] = useState(pick);
+  const [i, setI] = useState(0);
+  const [left, setLeft] = useState(TIME);
+  const [chosen, setChosen] = useState(null); // option index, -1 = timed out
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [cheer, setCheer] = useState("");
+  const q = qs[i];
+  const locked = chosen !== null;
+  const right = locked && chosen >= 0 && q.opts[chosen].ok;
+
+  useEffect(() => {
+    if (locked) return;
+    const t = setInterval(() => setLeft((l) => l - 1), 1000);
+    return () => clearInterval(t);
+  }, [locked, i]);
+
+  const answer = useCallback(
+    (idx) => {
+      if (chosen !== null) return;
+      const ok = idx >= 0 && q.opts[idx].ok;
+      const s = score + (ok ? POINTS : 0);
+      setChosen(idx);
+      setScore(s);
+      setStreak((n) => (ok ? n + 1 : 0));
+      setCheer(
+        ok
+          ? CHEERS[Math.floor(Math.random() * CHEERS.length)]
+          : idx === -1
+            ? "Time’s up!"
+            : "Not this time, Master.",
+      );
+      buzz(ok ? 25 : [60, 40, 60]);
+      setTimeout(() => {
+        if (i + 1 >= COUNT)
+          onDone({
+            score: s,
+            title: "QUIZ COMPLETE",
+            desc: `${s / POINTS} of ${COUNT} correct. ${s >= 400 ? "A true master!" : "Good effort, Master."}`,
+          });
+        else {
+          setI(i + 1);
+          setChosen(null);
+          setLeft(TIME);
+        }
+      }, NEXT_DELAY);
+    },
+    [chosen, q, score, i, onDone],
+  );
+
+  useEffect(() => {
+    if (left <= 0 && chosen === null) answer(-1);
+  }, [left, chosen, answer]);
+
+  // Keyboard: 1-4 or A-D
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+      const idx = "1234abcd".indexOf(e.key.toLowerCase());
+      if (idx >= 0 && idx % 4 < q.opts.length) answer(idx % 4);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [answer, q]);
+
+  const optCls = (o, idx) => {
+    if (!locked)
+      return "border-gold/50 bg-black/25 hover:-translate-y-0.5 hover:border-gold hover:bg-gold/10 hover:shadow-[0_6px_18px_rgba(245,184,46,.18)] active:scale-[.98]";
+    if (o.ok)
+      return "border-green-300 bg-gradient-to-r from-green-700 to-green-600 text-white animate-glowPulse";
+    if (idx === chosen)
+      return "border-red-300 bg-gradient-to-r from-red-800 to-red-600 text-white animate-shake";
+    return "border-gold/15 opacity-40";
+  };
+  const badgeCls = (o, idx) =>
+    !locked
+      ? "border-gold/60 bg-gold/15 text-gold group-hover:bg-gold group-hover:text-maroon"
+      : o.ok
+        ? "border-white/70 bg-white text-green-700"
+        : idx === chosen
+          ? "border-white/70 bg-white text-red-600"
+          : "border-gold/20 text-gold/50";
+
+  return (
+    <div className="flex flex-1 flex-col justify-center gap-3 pb-2">
+      {/* Progress + score */}
+      <div className="flex items-end justify-between px-1">
+        <div>
+          <p className="text-[11px] uppercase tracking-[.2em] opacity-70">
+            Question
+          </p>
+          <p className="font-display text-xl leading-none text-gold">
+            {i + 1}
+            <span className="opacity-50"> / {COUNT}</span>
+          </p>
+        </div>
+        <div className="relative text-right">
+          <p className="text-[11px] uppercase tracking-[.2em] opacity-70">
+            Score
+          </p>
+          <b
+            key={score}
+            className="inline-block animate-pop font-display text-xl leading-none text-gold"
+          >
+            {score}
+          </b>
+          {right && (
+            <span
+              key={`p${i}`}
+              className="pointer-events-none absolute -top-3 right-0 animate-floatUp font-display text-lg text-green-300"
+            >
+              +{POINTS}
+            </span>
+          )}
+        </div>
+      </div>
+      <div
+        className="flex gap-1.5"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={COUNT}
+        aria-valuenow={i + (locked ? 1 : 0)}
+      >
+        {qs.map((_, k) => (
+          <span
+            key={k}
+            className={`h-2 flex-1 rounded-full transition-all duration-500 ${k < i || (k === i && locked) ? "bg-gold shadow-[0_0_8px_rgba(245,184,46,.7)]" : k === i ? "animate-pulse bg-gold/50" : "bg-white/15"}`}
+          />
+        ))}
+      </div>
+
+      {/* Question card (re-keyed per question so it re-animates) */}
+      <section
+        key={i}
+        className="glass-card relative mt-7 animate-rise rounded-2xl border border-gold/40 px-4 pb-5 pt-11 text-center"
+      >
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+          <TimerRing key={i} left={left} frozen={locked} />
+        </div>
+        {streak >= 2 && (
+          <span
+            key={streak}
+            className="absolute left-3 top-3 flex animate-pop items-center gap-1 rounded-full border border-gold/60 bg-gold/15 px-2 py-0.5 font-display text-xs tracking-wide text-gold"
+          >
+            <Flame /> ×{streak}
+          </span>
+        )}
+        {q.img && (
+          <div className="medallion mx-auto mb-2 grid h-28 w-full place-items-center rounded-xl">
+            <img
+              src={IMG[q.img]}
+              alt=""
+              draggable={false}
+              className={`max-h-24 object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,.5)] ${q.img === "horse" ? "animate-bob" : ""}`}
+            />
+          </div>
+        )}
+        <h2 className="font-display text-[26px] leading-[1.15] tracking-wide text-gold">
+          {q.q}
+        </h2>
+      </section>
+
+      {/* Answers */}
+      <div
+        key={`o${i}`}
+        className="grid gap-2.5"
+        role="group"
+        aria-label="Answers"
+      >
+        {q.opts.map((o, idx) => (
+          <button
+            key={idx}
+            disabled={locked}
+            onClick={() => answer(idx)}
+            style={{ animationDelay: `${120 + idx * 70}ms` }}
+            className={`group relative flex w-full animate-rise items-center gap-3 rounded-xl border-2 px-3 py-3 text-left text-[17px] leading-snug transition duration-200 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white ${optCls(o, idx)}`}
+          >
+            <span
+              className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border font-display text-lg transition ${badgeCls(o, idx)}`}
+            >
+              {locked && o.ok ? (
+                <Check />
+              ) : locked && idx === chosen ? (
+                <Cross />
+              ) : (
+                LETTERS[idx]
+              )}
+            </span>
+            <span className="flex-1">{o.t}</span>
+            {locked && o.ok && chosen >= 0 && <Sparks />}
+          </button>
+        ))}
+      </div>
+
+      {/* Feedback pill (fixed height so layout never jumps) */}
+      <div className="grid h-9 place-items-center" aria-live="polite">
+        {locked ? (
+          <p
+            key={cheer + i}
+            className={`animate-pop rounded-full px-4 py-1 font-display tracking-wide ${right ? "bg-green-600/90 text-white" : "bg-red-700/80 text-white"}`}
+          >
+            {cheer}
+          </p>
+        ) : (
+          <p className="hidden text-[11px] uppercase tracking-[.2em] opacity-50 sm:block">
+            Tap an answer · or press 1–4
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

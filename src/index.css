@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  @apply bg-maroon text-cream font-serif select-none;
+}
+.btn-gold {
+  @apply font-display text-xl tracking-wide rounded-lg bg-gradient-to-b from-gold to-amber-600 text-maroon px-7 py-3.5 shadow-lg active:scale-95 transition disabled:opacity-40 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white;
+}
+.btn-ghost {
+  @apply font-display tracking-wide rounded-lg border-2 border-gold/70 text-gold px-4 py-2 active:scale-95 transition;
+}
+/* Quiz surfaces */
+.glass-card {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.09),
+    rgba(0, 0, 0, 0.28)
+  );
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.medallion {
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(245, 184, 46, 0.38),
+    rgba(245, 184, 46, 0.08) 55%,
+    transparent 72%
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
