@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { adminSignIn } from "../lib/supabase";
 
 // Hard-coded for now. Replace with a real API call later.
 export const ADMIN_EMAIL = "admin@mastersdelight.com";
@@ -13,17 +14,22 @@ export default function AdminLogin({ onSuccess, onBack }) {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [shake, setShake] = useState(0);
+  const [busy, setBusy] = useState(false);
 
-  const submit = (ev) => {
+  const submit = async (ev) => {
     ev.preventDefault();
-    if (
-      email.trim().toLowerCase() === ADMIN_EMAIL &&
-      password === ADMIN_PASSWORD
-    ) {
-      onSuccess();
-    } else {
+    if (busy) return;
+    setBusy(true);
+    const { error: err } = await adminSignIn(
+      email.trim().toLowerCase(),
+      password,
+    );
+    setBusy(false);
+    if (err) {
       setError("Incorrect email or password");
       setShake((n) => n + 1);
+    } else {
+      onSuccess();
     }
   };
 

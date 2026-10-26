@@ -1,82 +1,112 @@
-// Tiny player store. Everything lives in this browser's localStorage so the admin page
-// works with no backend. To go live, replace the bodies of these functions with API calls.
-const KEY = "md_players_v1";
+import { rest } from "./supabase";
+
 export const LEVELS = ["quiz", "blend", "hunt"];
 
-const read = () => {
-  try {
-    return JSON.parse(localStorage.getItem(KEY)) || [];
-  } catch {
-    return [];
-  }
-};
-const write = (list) => {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {
-    /* storage blocked / full: the game still works */
-  }
-};
-const blank = () => ({
-  scores: { quiz: 0, blend: 0, hunt: 0 },
-  done: { quiz: false, blend: false, hunt: false },
+const toPlayer = (r) => ({
+  id: r.id,
+  name: r.name,
+  city: r.city,
+  mobile: r.mobile,
+  scores: r.scores,
+  done: r.done,
+  plays: r.plays,
+  registeredAt: Date.parse(r.registered_at),
+  updatedAt: Date.parse(r.updated_at),
 });
 
-export const getPlayers = () => read();
+const inList = (ids) => `players?id=in.(${ids.join(",")})`;
 
-// Called when OTP is verified. Same mobile number = same player (new run, scores reset).
-export function registerPlayer({ name, city, mobile }) {
-  const list = read();
-  const now = Date.now();
-  let p = list.find((x) => x.mobile === mobile);
-  if (p) {
-    Object.assign(p, {
-      name,
-      city,
-      ...blank(),
-      plays: (p.plays || 1) + 1,
-      updatedAt: now,
+// ADMIN ONLY: list all players
+export async function getPlayers() {
+  try {
+    const rows = await rest("players?select=*&order=registered_at.desc", {
+      admin: true,
     });
-  } else {
-    p = {
-      id: `p${now}${Math.floor(Math.random() * 1e4)}`,
-      name,
-      city,
-      mobile,
-      ...blank(),
-      plays: 1,
-      registeredAt: now,
-      updatedAt: now,
-    };
-    list.push(p);
+    return rows.map(toPlayer);
+  } catch (e) {
+    console.error("getPlayers:", e.message);
+    return [];
   }
-  write(list);
-  return p.id;
 }
 
-export function saveLevel(id, key, score) {
-  const list = read();
-  const p = list.find((x) => x.id === id);
-  if (!p) return;
-  p.scores[key] = score;
-  p.done[key] = true;
-  p.updatedAt = Date.now();
-  write(list);
+// Called when OTP is verified. Returns the player's id (or null if it failed).
+export async function registerPlayer({ name, city, mobile }) {
+  try {
+    return await rest("rpc/register_player", {
+      method: "POST",
+      body: { p_name: name, p_city: city, p_mobile: mobile },
+    });
+  } catch (e) {
+    console.error("registerPlayer:", e.message);
+    return null;
+  }
+}
+
+export async function saveLevel(id, key, score) {
+  if (!id) return;
+  try {
+    await rest("rpc/save_level", {
+      method: "POST",
+      body: { p_id: id, p_key: key, p_score: score },
+    });
+  } catch (e) {
+    console.error("saveLevel:", e.message);
+  }
 }
 
 // "Play again": keep the registration, start a fresh run
-export function resetRun(id) {
-  const list = read();
-  const p = list.find((x) => x.id === id);
-  if (!p) return;
-  Object.assign(p, blank(), {
-    plays: (p.plays || 1) + 1,
-    updatedAt: Date.now(),
-  });
-  write(list);
+export async function resetRun(id) {
+  if (!id) return;
+  try {
+    await rest("rpc/reset_run", { method: "POST", body: { p_id: id } });
+  } catch (e) {
+    console.error("resetRun:", e.message);
+  }
 }
 
-export const clearPlayers = () => write([]);
+// ADMIN ONLY: delete everyone
+export async function clearPlayers() {
+  try {
+    await rest("players?id=neq.00000000-0000-0000-0000-000000000000", {
+      method: "DELETE",
+      admin: true,
+    });
+  } catch (e) {
+    console.error("clearPlayers:", e.message);
+  }
+}
+
+// ADMIN ONLY: remove several players (registration + scores)
+export async function deletePlayers(ids) {
+  if (!ids.length) return true;
+  try {
+    await rest(inList(ids), { method: "DELETE", admin: true });
+    return true;
+  } catch (e) {
+    console.error("deletePlayers:", e.message);
+    return false;
+  }
+}
+
+// ADMIN ONLY: wipe scores for several players but keep their registrations
+export async function clearScoresFor(ids) {
+  if (!ids.length) return true;
+  try {
+    await rest(inList(ids), {
+      method: "PATCH",
+      admin: true,
+      body: {
+        scores: { quiz: 0, blend: 0, hunt: 0 },
+        done: { quiz: false, blend: false, hunt: false },
+        updated_at: new Date().toISOString(),
+      },
+    });
+    return true;
+  } catch (e) {
+    console.error("clearScoresFor:", e.message);
+    return false;
+  }
+}
 
 // ---- derived helpers used by the admin page ----
 export const totalOf = (p) =>

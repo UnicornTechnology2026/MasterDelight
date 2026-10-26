@@ -14,6 +14,7 @@ import LevelComplete from "./components/LevelComplete";
 import Final from "./components/Final";
 import AdminLogin from "./components/AdminLogin";
 import Admin from "./components/Admin";
+import { adminSignOut } from "./lib/supabase";
 
 const ORDER = ["quiz", "blend", "hunt"];
 const START = { quiz: 0, blend: 0, hunt: 0 };
@@ -53,10 +54,10 @@ export default function App() {
     setUser(details);
     setScreen("otp");
   };
-  const verified = () => {
-    if (user) setPlayerId(registerPlayer(user)); // shows up in the admin Registrations tab
+  const verified = async () => {
     setAged(true);
     setScreen("welcome");
+    if (user) setPlayerId(await registerPlayer(user));
   }; // OTP passed
 
   // Jump straight to any page. Bumping `run` remounts the page, so a level always starts fresh.
@@ -140,6 +141,7 @@ export default function App() {
           <Admin
             onBack={() => setScreen(aged ? "welcome" : "login")}
             onLogout={() => {
+              adminSignOut();
               setIsAdmin(false);
               setScreen(aged ? "welcome" : "login");
             }}

@@ -13,15 +13,7 @@ export const QUESTIONS = [
     q: "What colour is the label on the Masters Delight bottle?",
     a: ["Red", "Blue", "Green", "Purple"],
   },
-  {
-    q: "What is Masters Delight a smooth blend of?",
-    a: [
-      "Imported Scotch malts and select Indian malts with grain spirit",
-      "Only grain spirit and botanicals",
-      "Indian rice spirit and oak",
-      "Imported rum and select grain",
-    ],
-  },
+
   { q: "Masters Delight is a premium…", a: ["Whisky", "Rum", "Vodka", "Gin"] },
   {
     q: "What colour is the strip at the bottom of the label?",

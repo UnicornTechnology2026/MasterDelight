@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LEVELS,
   clearPlayers,
+  clearScoresFor,
+  deletePlayers,
   doneCount,
   getPlayers,
   totalOf,
@@ -107,8 +109,8 @@ function Table({ head, children, empty }) {
       <table className="w-full min-w-[560px] border-collapse">
         <thead className="bg-black/40">
           <tr>
-            {head.map((h) => (
-              <th key={h} className={th}>
+            {head.map((h, i) => (
+              <th key={i} className={th}>
                 {h}
               </th>
             ))}
@@ -193,70 +195,6 @@ function Analytics({ players }) {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Journey funnel">
-          {funnel.map(([l, v]) => (
-            <Bar
-              key={l}
-              label={l}
-              value={v}
-              max={n}
-              right={`${v}${n ? ` · ${Math.round((v / n) * 100)}%` : ""}`}
-            />
-          ))}
-        </Card>
-        <Card title="Score by level">
-          <div className="space-y-3">
-            {s.perLevel.map((l) => (
-              <div
-                key={l.k}
-                className="flex items-center justify-between gap-2 rounded-xl border border-gold/20 bg-black/25 px-3 py-2"
-              >
-                <div>
-                  <p className="text-xs text-white/85">{LEVEL_LABEL[l.k]}</p>
-                  <p className="text-[11px] text-white/55">
-                    {l.n} played · best {l.best}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display text-2xl leading-none text-gold">
-                    {l.avg}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-white/55">
-                    avg
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card title="Ranks (completed players)">
-          {s.ranks.map((r) => (
-            <Bar
-              key={r.name}
-              label={r.name}
-              value={r.n}
-              max={Math.max(1, s.completed)}
-            />
-          ))}
-          <h3 className="mb-3 mt-5 text-[11px] uppercase tracking-[.2em] text-gold/80">
-            Top cities
-          </h3>
-          {s.cities.length ? (
-            s.cities.map((c) => (
-              <Bar
-                key={c.name}
-                label={c.name}
-                value={c.n}
-                max={s.cities[0].n}
-              />
-            ))
-          ) : (
-            <p className="text-xs text-white/60">No data yet</p>
-          )}
-        </Card>
-      </div>
-
       <Card title="Player progress & scores (latest activity)">
         <Table
           head={["Name", "Level 1", "Level 2", "Level 3", "Total", "Status"]}
@@ -304,7 +242,39 @@ function Badge({ s }) {
   );
 }
 
-function Registrations({ players }) {
+function Check({ checked, onChange, label }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      aria-label={label}
+      className="h-4 w-4 cursor-pointer accent-[#f0cf7a]"
+    />
+  );
+}
+
+// selection state shared by the Registrations and Scores tables
+function useSelection(rows) {
+  const [sel, setSel] = useState(() => new Set());
+  const ids = rows.map((p) => p.id);
+  const picked = rows.filter((p) => sel.has(p.id)); // only counts rows currently shown
+  const allOn = ids.length > 0 && picked.length === ids.length;
+  const toggle = (id) =>
+    setSel((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  const toggleAll = () => setSel(allOn ? new Set() : new Set(ids));
+  const clear = () => setSel(new Set());
+  return { picked, allOn, toggle, toggleAll, clear, has: (id) => sel.has(id) };
+}
+
+const dangerBtn =
+  "rounded-md border border-red-400/60 bg-red-500/20 px-3 py-1.5 text-sm text-red-200 hover:bg-red-500/35";
+
+function Registrations({ players, onDelete }) {
   const [q, setQ] = useState("");
   const rows = [...players]
     .sort((a, b) => b.registeredAt - a.registeredAt)
@@ -313,6 +283,8 @@ function Registrations({ players }) {
         .toLowerCase()
         .includes(q.trim().toLowerCase()),
     );
+  const s = useSelection(rows);
+
   return (
     <Card>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -322,26 +294,59 @@ function Registrations({ players }) {
           placeholder="Search name, city or mobile"
           className="w-full rounded-md border border-gold/40 bg-black/30 px-3 py-2 font-body text-sm text-white placeholder-white/40 outline-none focus:border-gold sm:w-72"
         />
-        <button
-          className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
-          onClick={() =>
-            download("registrations.csv", [
-              ["Name", "City", "Mobile", "Registered"],
-              ...rows.map((p) => [
-                p.name,
-                p.city,
-                p.mobile,
-                new Date(p.registeredAt).toISOString(),
-              ]),
-            ])
-          }
-        >
-          EXPORT CSV
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {s.picked.length > 0 && (
+            <button
+              className={dangerBtn}
+              onClick={async () => {
+                if (await onDelete(s.picked)) s.clear();
+              }}
+            >
+              DELETE ({s.picked.length})
+            </button>
+          )}
+          <button
+            className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
+            onClick={() =>
+              download("registrations.csv", [
+                ["Name", "City", "Mobile", "Registered"],
+                ...rows.map((p) => [
+                  p.name,
+                  p.city,
+                  p.mobile,
+                  new Date(p.registeredAt).toISOString(),
+                ]),
+              ])
+            }
+          >
+            EXPORT CSV
+          </button>
+        </div>
       </div>
-      <Table head={["#", "Name", "City", "Mobile", "Registered"]}>
+      <Table
+        head={[
+          <Check
+            key="all"
+            checked={s.allOn}
+            onChange={s.toggleAll}
+            label="Select all"
+          />,
+          "#",
+          "Name",
+          "City",
+          "Mobile",
+          "Registered",
+        ]}
+      >
         {rows.map((p, i) => (
           <tr key={p.id}>
+            <td className={td}>
+              <Check
+                checked={s.has(p.id)}
+                onChange={() => s.toggle(p.id)}
+                label={`Select ${p.name}`}
+              />
+            </td>
             <td className={`${td} text-white/50`}>{i + 1}</td>
             <td className={td}>{p.name}</td>
             <td className={td}>{p.city}</td>
@@ -357,11 +362,23 @@ function Registrations({ players }) {
   );
 }
 
-function Scores({ players }) {
+function Scores({ players, onClear }) {
   const rows = [...players].sort((a, b) => totalOf(b) - totalOf(a));
+  const s = useSelection(rows);
+
   return (
     <Card>
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap justify-end gap-2">
+        {s.picked.length > 0 && (
+          <button
+            className={dangerBtn}
+            onClick={async () => {
+              if (await onClear(s.picked)) s.clear();
+            }}
+          >
+            DELETE SCORES ({s.picked.length})
+          </button>
+        )}
         <button
           className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
           onClick={() =>
@@ -378,9 +395,31 @@ function Scores({ players }) {
           EXPORT CSV
         </button>
       </div>
-      <Table head={["Rank", "Name", "Level 1", "Level 2", "Level 3", "Total"]}>
+      <Table
+        head={[
+          <Check
+            key="all"
+            checked={s.allOn}
+            onChange={s.toggleAll}
+            label="Select all"
+          />,
+          "Rank",
+          "Name",
+          "Level 1",
+          "Level 2",
+          "Level 3",
+          "Total",
+        ]}
+      >
         {rows.map((p, i) => (
           <tr key={p.id}>
+            <td className={td}>
+              <Check
+                checked={s.has(p.id)}
+                onChange={() => s.toggle(p.id)}
+                label={`Select ${p.name}`}
+              />
+            </td>
             <td className={`${td} text-white/50`}>{i + 1}</td>
             <td className={td}>{p.name}</td>
             {LEVELS.map((k) => (
@@ -405,26 +444,49 @@ function Scores({ players }) {
 
 export default function Admin({ onLogout, onBack }) {
   const [tab, setTab] = useState("analytics");
-  const [players, setPlayers] = useState(getPlayers);
-  const refresh = useCallback(() => setPlayers(getPlayers()), []);
+  const [players, setPlayers] = useState([]); // must start as an empty array
 
-  // live update: other tabs/windows write to localStorage while people play
+  const refresh = useCallback(async () => {
+    const list = await getPlayers();
+    setPlayers(Array.isArray(list) ? list : []);
+  }, []);
+
+  // live update: poll Supabase every 5s while people play
   useEffect(() => {
-    window.addEventListener("storage", refresh);
+    refresh();
     const t = setInterval(refresh, 5000);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      clearInterval(t);
-    };
+    return () => clearInterval(t);
   }, [refresh]);
 
-  const wipe = () => {
-    if (
-      window.confirm("Delete ALL registrations and scores from this browser?")
-    ) {
-      clearPlayers();
+  const wipe = async () => {
+    if (window.confirm("Delete ALL registrations and scores?")) {
+      await clearPlayers();
       refresh();
     }
+  };
+
+  const removePlayers = async (list) => {
+    if (
+      !window.confirm(
+        `Delete ${list.length} registration${list.length > 1 ? "s" : ""} and their scores? This can't be undone.`,
+      )
+    )
+      return false;
+    const ok = await deletePlayers(list.map((p) => p.id));
+    refresh();
+    return ok;
+  };
+
+  const resetScores = async (list) => {
+    if (
+      !window.confirm(
+        `Clear scores for ${list.length} player${list.length > 1 ? "s" : ""}? Their registrations stay.`,
+      )
+    )
+      return false;
+    const ok = await clearScoresFor(list.map((p) => p.id));
+    refresh();
+    return ok;
   };
 
   return (
@@ -470,8 +532,10 @@ export default function Admin({ onLogout, onBack }) {
       </nav>
 
       {tab === "analytics" && <Analytics players={players} />}
-      {tab === "registrations" && <Registrations players={players} />}
-      {tab === "scores" && <Scores players={players} />}
+      {tab === "registrations" && (
+        <Registrations players={players} onDelete={removePlayers} />
+      )}
+      {tab === "scores" && <Scores players={players} onClear={resetScores} />}
 
       {!!players.length && (
         <button
