@@ -68,14 +68,15 @@ export default function App() {
 
   const fit = screen === "welcome"; // Welcome fits the screen exactly, with no scrolling
   const deskFit = screen === "blend" || screen === "quiz";
-  const wide = ["welcome", "quiz", "blend"].includes(screen); // full-width desktop layout
+  const huntFit = screen === "hunt"; // Hunt fills the screen exactly, scene sits inside the layout
+  const wide = ["welcome", "quiz", "blend", "hunt"].includes(screen); // full-width desktop layout
 
   return (
     <div
-      className={`app-bg ${fit ? "h-dvh overflow-hidden" : deskFit ? "min-h-dvh lg:h-dvh lg:overflow-hidden" : "min-h-dvh"}`}
+      className={`app-bg ${fit || huntFit ? "h-dvh overflow-hidden" : deskFit ? "min-h-dvh lg:h-dvh lg:overflow-hidden" : "min-h-dvh"}`}
     >
       <main
-        className={`mx-auto flex flex-col px-4 py-3 lg:px-10 ${fit ? "h-dvh" : deskFit ? "min-h-dvh lg:h-dvh" : "min-h-dvh"} ${wide ? "max-w-7xl" : "max-w-md"}`}
+        className={`mx-auto flex flex-col px-4 py-3 lg:px-10 ${fit || huntFit ? "h-dvh" : deskFit ? "min-h-dvh lg:h-dvh" : "min-h-dvh"} ${wide ? "max-w-7xl" : "max-w-md"}`}
       >
         {level > 0 ? (
           <Header level={level} total={total} jump={jump("left")} />
@@ -100,9 +101,7 @@ export default function App() {
         {screen === "welcome" && <Welcome onStart={start} user={user} />}
         {screen === "quiz" && <Quiz key={run} onDone={finish("quiz")} />}
         {screen === "blend" && <Blend key={run} onDone={finish("blend")} />}
-        {screen === "hunt" && (
-          <Hunt key={run} onDone={finish("hunt")} jump={jump("left")} />
-        )}
+        {screen === "hunt" && <Hunt key={run} onDone={finish("hunt")} />}
         {screen === "complete" && (
           <LevelComplete
             result={result}

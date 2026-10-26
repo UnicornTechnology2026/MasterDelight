@@ -66,9 +66,9 @@ export const INGREDIENTS = [
 // ---- Level 3: hidden mini bottles on the bar scene: [x %, y %, rotation deg]
 // 1 shelf (left arch) · 2 shelf (right alcove) · 3 table (right) · 4 lying on the bar · 5 on the stool
 export const HIDDEN = [
-  [31, 45, 0],
-  [56, 38, 0],
-  [91, 60, -8],
-  [45, 70, -70],
-  [69, 82, 0],
+  [29, 28.5, 0], // first bottle on the top of the cupboard [left right, top bottom, angle]
+  [28, 70, 0], // second bottle on the left side of cupboard
+  [54, 61.5, 0], // third bottle in the center of the table
+  [69, 86, 0], // fourth bottle on the floor
+  [85, 29.5, 0], // fifth bottle on the book shelf
 ];
