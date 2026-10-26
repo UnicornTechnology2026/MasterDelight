@@ -7,7 +7,7 @@ import { shuffle } from "../lib/shuffle";
 // ---- Tunables -------------------------------------------------------------
 const IMG = { horse, tagline };
 const TIME = 16000; // seconds per question
-const COUNT = 5; // questions per run
+const COUNT = 3; // questions per run
 const NEXT_DELAY = 1400; // ms the feedback stays on screen
 const POINTS = 100;
 const LETTERS = ["A", "B", "C", "D"];
@@ -187,7 +187,7 @@ export default function Quiz({ onDone }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 pb-2 lg:gap-3">
       {/* HUD: title · question progress · timer · score (same as the Hunt level) */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-4">
         <p className="font-mono text-[11px] uppercase tracking-[.15em] text-cream/90 sm:text-xs">
           Master’s Quick Quiz
         </p>
@@ -240,14 +240,14 @@ export default function Quiz({ onDone }) {
       </div>
 
       {/* Quiz frame, sits in the page layout (same gold frame as the Hunt scene) */}
-      <div className="relative rounded-2xl border border-gold/70 bg-black/30 p-3 shadow-[0_18px_40px_rgba(0,0,0,.55),0_0_30px_rgba(245,184,46,.18)] backdrop-blur-sm lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:p-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="grid gap-3 lg:h-full lg:grid-cols-2 lg:items-center lg:gap-12">
+      <div className="relative mx-auto w-full max-w-[56rem] rounded-2xl  border-gold/70 p-3   lg:my-auto lg:flex-none lg:overflow-y-auto lg:p-4 lg:pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="grid w-full gap-3 lg:grid-cols-2 lg:items-start lg:gap-6">
           {/* Question panel (re-keyed per question so it re-animates) */}
           <section
             key={i}
             className="relative animate-rise rounded-xl border border-gold/40 bg-[radial-gradient(ellipse_at_50%_0%,rgba(122,12,18,.92),rgba(30,3,6,.95)_75%)] shadow-[inset_0_0_30px_rgba(245,184,46,.08)]"
           >
-            <div className="relative flex flex-col justify-center px-5 py-6 text-center lg:min-h-[22rem] lg:px-12 lg:py-10">
+            <div className="relative flex flex-col justify-center px-3 py-3 text-center lg:min-h-[16rem] lg:px-6 lg:py-5">
               {streak >= 2 && (
                 <span
                   key={streak}
@@ -266,10 +266,10 @@ export default function Quiz({ onDone }) {
                   />
                 </div>
               )}
-              <h2 className="font-head text-[clamp(20px,5.8vw,26px)] font-bold leading-snug text-[#fff8e6] [text-shadow:0_2px_12px_rgba(0,0,0,.6)] lg:text-[clamp(28px,2.6vw,42px)]">
+              <h2 className="font-head text-[clamp(16px,4.6vw,20px)] font-bold leading-snug text-[#fff8e6] [text-shadow:0_2px_12px_rgba(0,0,0,.6)] lg:text-[clamp(20px,1.8vw,28px)]">
                 {q.q}
               </h2>
-              <div className="mx-auto mt-4 flex w-40 items-center gap-2 lg:mt-7 lg:w-56">
+              <div className="mx-auto mt-4 flex w-40 items-center gap-2 lg:mt-5 lg:w-44">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/70" />
                 <span className="h-1.5 w-1.5 rotate-45 bg-gold" />
                 <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/70" />
@@ -281,7 +281,7 @@ export default function Quiz({ onDone }) {
           <div className="flex flex-col gap-3">
             <div
               key={`o${i}`}
-              className="grid gap-2.5 lg:gap-4"
+              className="grid gap-4 lg:gap-5"
               role="group"
               aria-label="Answers"
             >
@@ -291,10 +291,10 @@ export default function Quiz({ onDone }) {
                   disabled={locked}
                   onClick={() => answer(idx)}
                   style={{ animationDelay: `${120 + idx * 70}ms` }}
-                  className={`group relative flex w-full animate-rise items-center gap-3 rounded-2xl border-2 px-3 py-2.5 text-left font-body text-[15px] leading-snug text-[#fff8e6] transition duration-200 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white lg:gap-5 lg:px-5 lg:py-5 lg:text-xl ${optCls(o, idx)}`}
+                  className={`group relative flex w-full animate-rise items-center gap-4 rounded-2xl border-2 px-2.5 py-1.5 text-left font-body text-[13px] leading-snug text-[#fff8e6] transition duration-200 focus-visible:outline focus-visible:outline-4 focus-visible:outline-white lg:gap-3 lg:px-3 lg:py-2 lg:text-sm ${optCls(o, idx)}`}
                 >
                   <span
-                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border font-display text-lg transition lg:h-12 lg:w-12 lg:text-2xl ${badgeCls(o, idx)}`}
+                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border font-display text-base transition lg:h-8 lg:w-8 lg:text-lg ${badgeCls(o, idx)}`}
                   >
                     {locked && o.ok ? (
                       <Check />

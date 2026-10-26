@@ -3,7 +3,7 @@ import Bottle from "./Bottle";
 import { INGREDIENTS } from "../data";
 import { shuffle } from "../lib/shuffle";
 
-const TIME = 20, // seconds
+const TIME = 2000, // seconds
   BONUS_AT = 10,
   NEED = INGREDIENTS.filter((i) => i.ok).length;
 const STATUS = [
