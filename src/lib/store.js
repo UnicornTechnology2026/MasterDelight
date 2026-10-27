@@ -64,6 +64,22 @@ export async function resetRun(id) {
   }
 }
 
+// PUBLIC: top players for the leaderboard (name, city and totals only - no mobile numbers).
+export async function getLeaderboard(limit = 50) {
+  const rows = await rest("rpc/get_leaderboard", {
+    method: "POST",
+    body: { p_limit: limit },
+  });
+  return (rows || []).map((r) => ({
+    id: r.id,
+    rank: Number(r.rnk),
+    name: r.name,
+    city: r.city,
+    total: r.total,
+    levels: r.levels,
+  }));
+}
+
 // ADMIN ONLY: delete everyone
 export async function clearPlayers() {
   try {

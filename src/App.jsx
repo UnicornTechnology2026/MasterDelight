@@ -15,6 +15,7 @@ import Final from "./components/Final";
 import AdminLogin from "./components/AdminLogin";
 import Admin from "./components/Admin";
 import { adminSignOut } from "./lib/supabase";
+import Leaderboard from "./components/Leaderboard";
 
 const ORDER = ["quiz", "blend", "hunt"];
 const START = { quiz: 0, blend: 0, hunt: 0 };
@@ -30,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState(null); // { name, city, mobile }
   const [playerId, setPlayerId] = useState(null); // id of this player in the admin store
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showBoard, setShowBoard] = useState(false); // leaderboard popup
 
   const finish = (key) => (r) => {
     if (playerId) saveLevel(playerId, key, r.score);
@@ -77,6 +79,15 @@ export default function App() {
   const jump = (align) => (
     <div className="flex items-center gap-2">
       <JumpMenu current={current} aged={aged} onJump={jumpTo} align={align} />
+      <button
+        type="button"
+        onClick={() => setShowBoard(true)}
+        aria-label="Leaderboard"
+        className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
+      >
+        <span aria-hidden="true">🏆</span>
+        <span className="hidden sm:inline"> LEADERBOARD</span>
+      </button>
       <button
         type="button"
         onClick={openAdmin}
@@ -168,6 +179,9 @@ export default function App() {
         )}
         {screen === "final" && <Final scores={scores} onRestart={restart} />}
       </main>
+      {showBoard && (
+        <Leaderboard playerId={playerId} onClose={() => setShowBoard(false)} />
+      )}
     </div>
   );
 }
