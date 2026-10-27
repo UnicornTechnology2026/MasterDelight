@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PrivacyPolicy from "./PrivacyPolicy";
 
 const field =
   "w-full rounded-md border border-[#f3d28a]/60 bg-black/20 px-4 py-3 font-body text-[15px] text-white placeholder-white/50 outline-none transition focus:border-[#f3d28a] focus:ring-2 focus:ring-[#f3d28a]/40";
@@ -9,6 +10,7 @@ export default function Login({ onSubmit, initial }) {
   const [mobile, setMobile] = useState(initial?.mobile || "");
   const [agree, setAgree] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPolicy, setShowPolicy] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -101,13 +103,13 @@ export default function Login({ onSubmit, initial }) {
                   />
                   <span>
                     I agree to the{" "}
-                    <a
-                      href="#privacy"
-                      onClick={(e) => e.preventDefault()}
+                    <button
+                      type="button"
+                      onClick={() => setShowPolicy(true)}
                       className="font-semibold text-[#f3d28a] underline underline-offset-2"
                     >
                       Privacy Policy
-                    </a>{" "}
+                    </button>{" "}
                     and terms &amp; conditions.
                   </span>
                 </label>
@@ -127,6 +129,14 @@ export default function Login({ onSubmit, initial }) {
       <p className="text-[10px] opacity-60">
         Please drink responsibly. For adults of legal drinking age only.
       </p>
+      <PrivacyPolicy
+        open={showPolicy}
+        onClose={() => setShowPolicy(false)}
+        onAccept={() => {
+          setAgree(true);
+          setErrors((e) => ({ ...e, agree: undefined }));
+        }}
+      />
     </div>
   );
 }

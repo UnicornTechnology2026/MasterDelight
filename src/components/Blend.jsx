@@ -3,8 +3,7 @@ import Bottle from "./Bottle";
 import { INGREDIENTS } from "../data";
 import { shuffle } from "../lib/shuffle";
 
-const TIME = 2000, // seconds
-  BONUS_AT = 10,
+const TIME = 20, // seconds
   NEED = INGREDIENTS.filter((i) => i.ok).length;
 const STATUS = [
   "Drag or tap ingredients into the bottle",
@@ -49,27 +48,24 @@ export default function Blend({ onDone }) {
     if (won || ended || got.includes(it.id)) return;
     if (it.ok) {
       const next = [...got, it.id],
-        s = score + 100;
+        s = score + 10;
       setGot(next);
       setScore(s);
-      flash(`${it.name} added! +100`, true);
+      flash(`${it.name} added! +10`, true);
       if (next.length === NEED) {
-        const bonus = left >= BONUS_AT ? 50 : 0;
         setTimeout(
           () =>
             onDone({
-              score: s + bonus,
+              score: s,
               title: "BLEND COMPLETE",
-              desc: bonus
-                ? "Speed bonus +50. A true master blender!"
-                : "Beautifully blended.",
+              desc: "Beautifully blended.",
             }),
           900,
         );
       }
     } else {
-      setScore((s) => s - 25);
-      flash(`${it.name} is not in this blend. −25`, false);
+      setScore((s) => s - 5);
+      flash(`${it.name} is not in this blend. −5`, false);
       setShake(it.id);
       setTimeout(() => setShake(null), 400);
     }

@@ -28,6 +28,10 @@ export const QUESTIONS = [
     q: "What colour is the horse on the poster?",
     a: ["Gold", "Silver", "Black", "White"],
   },
+  {
+    q: "Who is the brand ambassador of Master's Delight Whisky?",
+    a: ["Hrithik Roshan", "Shah Rukh Khan", "Ranbir Kapoor", "Ajay Devgan"],
+  },
 ];
 // ---- Level 2: ingredients. ok:true = genuine (from the bottle label).
 export const INGREDIENTS = [

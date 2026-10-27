@@ -82,23 +82,18 @@ export default function Loader({ onDone }) {
       aria-valuemax={100}
       aria-valuenow={shown}
     >
-      <img
-        src={logo}
-        alt="Masters Delight"
-        className="w-40 animate-rise drop-shadow-xl"
-      />
       <div
         className="transition-[filter] duration-300"
         style={{
           filter: `drop-shadow(0 0 ${6 + pct * 26}px rgba(245,184,46,${0.25 + pct * 0.55}))`,
         }}
       >
-        <Bottle grey fill={pct} className="h-[42vh] max-h-[420px] w-auto" />
+        <Bottle grey fill={pct} className="h-[70vh] max-h-[420px] w-auto" />
       </div>
       <p key={msg} className="h-5 animate-rise text-sm">
         {msg}
       </p>
-      <img src={tagline} alt="Har Master Ke Liye" className="w-28 opacity-90" />
+
       <p className="text-[10px] opacity-60">
         Please drink responsibly. For adults of legal drinking age only.
       </p>

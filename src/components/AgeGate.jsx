@@ -53,9 +53,6 @@ export default function AgeGate({ onEnter }) {
             >
               Enter
             </button>
-            <p className="mt-3 hidden font-body text-[10px] uppercase tracking-[.2em] text-white/60 [@media(hover:hover)]:block">
-              or press Enter ↵
-            </p>
           </div>
         </div>
       </section>

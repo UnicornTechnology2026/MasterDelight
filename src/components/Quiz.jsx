@@ -6,18 +6,12 @@ import { shuffle } from "../lib/shuffle";
 
 // ---- Tunables -------------------------------------------------------------
 const IMG = { horse, tagline };
-const TIME = 16000; // seconds per question
+const TIME = 25; // seconds per question
 const COUNT = 3; // questions per run
 const NEXT_DELAY = 1400; // ms the feedback stays on screen
-const POINTS = 100;
+const POINTS = 10;
 const LETTERS = ["A", "B", "C", "D"];
-const CHEERS = [
-  "Wah, Master!",
-  "Spot on!",
-  "Sharp mind!",
-  "Master class!",
-  "Bilkul sahi!",
-];
+const CHEERS = ["Wah, Master!", "Spot on!", "Sharp mind!", "Master class!"];
 
 const pick = () =>
   shuffle(QUESTIONS)
@@ -135,7 +129,7 @@ export default function Quiz({ onDone }) {
           onDone({
             score: s,
             title: "QUIZ COMPLETE",
-            desc: `${s / POINTS} of ${COUNT} correct. ${s >= 400 ? "A true master!" : "Good effort, Master."}`,
+            desc: `${s / POINTS} of ${COUNT} correct. ${s === COUNT * POINTS ? "A true master!" : "Good effort, Master."}`,
           });
         else {
           setI(i + 1);

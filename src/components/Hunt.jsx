@@ -55,18 +55,16 @@ export default function Hunt({ onDone }) {
     }
   }, [ready, portrait]);
 
-  const finish = (f, m, l) => {
+  const finish = (f, m) => {
     setFin(true);
     const all = f === N,
-      pts = Math.max(0, f * 10 - m * 5 + (all ? l : 0));
+      pts = Math.max(0, f * 10 - m * 5);
     setTimeout(
       () =>
         onDone({
           score: pts,
           title: all ? "ALL BOTTLES FOUND" : "TIME EXPIRED",
-          desc: all
-            ? `Time bonus +${l}. Sharp eyes, Master!`
-            : `${f} of ${N} bottles found.`,
+          desc: all ? "Sharp eyes, Master!" : `${f} of ${N} bottles found.`,
         }),
       all ? 900 : 400,
     );

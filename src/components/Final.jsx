@@ -3,8 +3,8 @@ import horse from "../assets/horse.png";
 
 const RANKS = [
   { name: "RISING MASTER", min: 0 },
-  { name: "MASTER BLENDER", min: 500 },
-  { name: "GRAND MASTER", min: 750 },
+  { name: "MASTER BLENDER", min: 40 },
+  { name: "GRAND MASTER", min: 70 },
 ];
 const COLORS = ["#f5b82e", "#fff1b8", "#d8ab45", "#c1121f", "#ffffff"];
 
@@ -141,9 +141,6 @@ export default function Final({ scores, onRestart }) {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <button className="btn-gold" onClick={onRestart}>
-              PLAY AGAIN
-            </button>
             <button
               className="btn-ghost bg-black/30"
               onClick={() => setPlay((n) => n + 1)}
