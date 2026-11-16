@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import horse from "../assets/horse.png";
 
 const RANKS = [
   { name: "RISING MASTER", min: 0 },
-  { name: "MASTER BLENDER", min: 40 },
-  { name: "GRAND MASTER", min: 70 },
+  { name: "Blend Champion", min: 40 },
+  { name: "Ultimate Master", min: 70 },
 ];
 const COLORS = ["#f5b82e", "#fff1b8", "#d8ab45", "#c1121f", "#ffffff"];
 
@@ -25,7 +24,7 @@ function useCountUp(target, replay, ms = 1500) {
   return v;
 }
 
-export default function Final({ scores, onRestart }) {
+export default function Final({ scores, onRestart, onCoupon }) {
   const total = scores.quiz + scores.blend + scores.hunt;
   const [play, setPlay] = useState(0); // bump to replay the celebration
   const shown = useCountUp(total, play);
@@ -142,10 +141,10 @@ export default function Final({ scores, onRestart }) {
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
-              className="btn-ghost bg-black/30"
-              onClick={() => setPlay((n) => n + 1)}
+              className="btn-gold btn-shine relative overflow-hidden"
+              onClick={onCoupon}
             >
-              ✦ Celebrate
+              🎟 Delight Coupon
             </button>
           </div>
           <p className="text-[10px] opacity-60">

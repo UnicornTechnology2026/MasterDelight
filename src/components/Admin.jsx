@@ -22,8 +22,8 @@ const LEVEL_LABEL = {
 const SHORT = { quiz: "L1", blend: "L2", hunt: "L3" };
 const RANKS = [
   { name: "Rising Master", min: 0 },
-  { name: "Master Blender", min: 500 },
-  { name: "Grand Master", min: 750 },
+  { name: "Blend Champion", min: 500 },
+  { name: "Ultimate Master", min: 750 },
 ];
 
 const fmtDate = (t) =>

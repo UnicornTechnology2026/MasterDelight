@@ -12,6 +12,7 @@ import Blend from "./components/Blend";
 import Hunt from "./components/Hunt";
 import LevelComplete from "./components/LevelComplete";
 import Final from "./components/Final";
+import Coupon, { makeCoupon } from "./components/Coupon";
 import AdminLogin from "./components/AdminLogin";
 import Admin from "./components/Admin";
 import { adminSignOut } from "./lib/supabase";
@@ -32,6 +33,7 @@ export default function App() {
   const [playerId, setPlayerId] = useState(null); // id of this player in the admin store
   const [isAdmin, setIsAdmin] = useState(false);
   const [showBoard, setShowBoard] = useState(false); // leaderboard popup
+  const [coupon, setCoupon] = useState(null); // one scratch reward per run
 
   const finish = (key) => (r) => {
     if (playerId) saveLevel(playerId, key, r.score);
@@ -46,6 +48,7 @@ export default function App() {
   const restart = () => {
     if (playerId) resetRun(playerId);
     setScores(START);
+    setCoupon(null);
     setRun((n) => n + 1);
     setScreen("welcome");
   };
@@ -100,7 +103,7 @@ export default function App() {
 
   const fit = screen === "welcome"; // Welcome fits the screen exactly, with no scrolling
   const deskFit = screen === "blend" || screen === "quiz";
-  const huntFit = ["hunt", "complete", "final"].includes(screen); // these screens fill the screen exactly
+  const huntFit = ["hunt", "complete", "final", "coupon"].includes(screen); // these screens fill the screen exactly
   const wide = [
     "welcome",
     "quiz",
@@ -108,6 +111,7 @@ export default function App() {
     "hunt",
     "complete",
     "final",
+    "coupon",
     "admin",
   ].includes(screen); // full-width desktop layout
 
@@ -177,7 +181,19 @@ export default function App() {
             total={total}
           />
         )}
-        {screen === "final" && <Final scores={scores} onRestart={restart} />}
+        {screen === "final" && (
+          <Final
+            scores={scores}
+            onRestart={restart}
+            onCoupon={() => {
+              setCoupon((c) => c || makeCoupon());
+              setScreen("coupon");
+            }}
+          />
+        )}
+        {screen === "coupon" && coupon && (
+          <Coupon coupon={coupon} onBack={() => setScreen("final")} />
+        )}
       </main>
       {showBoard && (
         <Leaderboard playerId={playerId} onClose={() => setShowBoard(false)} />
