@@ -8,6 +8,8 @@ import {
   getPlayers,
   totalOf,
 } from "../lib/store";
+import ConfirmDialog from "./ConfirmDialog";
+import { downloadExcel } from "../lib/exportExcel";
 
 const TABS = [
   ["analytics", "Analytics"],
@@ -310,16 +312,36 @@ function Registrations({ players, onDelete }) {
           <button
             className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
             onClick={() =>
-              download("registrations.csv", [
-                ["Name", "City", "Mobile", , "Coupon won", "Registered"],
-                ...rows.map((p) => [
-                  p.name,
-                  p.city,
-                  p.mobile,
-                  couponText(p),
-                  new Date(p.registeredAt).toISOString(),
-                ]),
-              ])
+              downloadExcel({
+                fileName: "registrations.xlsx",
+                sheetName: "Registrations",
+                columns: [
+                  { header: "S.No", key: "sno", width: 8, align: "center" },
+                  { header: "Name", key: "name", width: 26 },
+                  { header: "City", key: "city", width: 20 },
+                  { header: "Mobile", key: "mobile", width: 18, type: "text" },
+                  {
+                    header: "Coupon Won",
+                    key: "coupon",
+                    width: 14,
+                    align: "center",
+                  },
+                  {
+                    header: "Registered On",
+                    key: "registeredAt",
+                    width: 22,
+                    type: "date",
+                  },
+                ],
+                rows: rows.map((p, i) => ({
+                  sno: i + 1,
+                  name: p.name,
+                  city: p.city,
+                  mobile: `+91 ${p.mobile}`,
+                  coupon: couponText(p) || "—",
+                  registeredAt: new Date(p.registeredAt),
+                })),
+              })
             }
           >
             EXPORT FILE
@@ -403,14 +425,46 @@ function Scores({ players, onClear }) {
         <button
           className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
           onClick={() =>
-            download("scores.csv", [
-              ["Name", "Level 1", "Level 2", "Level 3", "Total"],
-              ...rows.map((p) => [
-                p.name,
-                ...LEVELS.map((k) => (p.done[k] ? p.scores[k] : "")),
-                totalOf(p),
-              ]),
-            ])
+            downloadExcel({
+              fileName: "scores.xlsx",
+              sheetName: "Scores",
+              columns: [
+                { header: "Rank", key: "rank", width: 8, align: "center" },
+                { header: "Name", key: "name", width: 26 },
+                {
+                  header: LEVEL_LABEL.quiz,
+                  key: "quiz",
+                  width: 18,
+                  type: "number",
+                },
+                {
+                  header: LEVEL_LABEL.blend,
+                  key: "blend",
+                  width: 18,
+                  type: "number",
+                },
+                {
+                  header: LEVEL_LABEL.hunt,
+                  key: "hunt",
+                  width: 18,
+                  type: "number",
+                },
+                {
+                  header: "Total Score",
+                  key: "total",
+                  width: 14,
+                  type: "number",
+                },
+              ],
+              rows: rows.map((p, i) => ({
+                rank: i + 1,
+                name: p.name,
+                quiz: p.done.quiz ? p.scores.quiz : null,
+                blend: p.done.blend ? p.scores.blend : null,
+                hunt: p.done.hunt ? p.scores.hunt : null,
+                total: totalOf(p),
+              })),
+            })
           }
         >
           EXPORT FILE
@@ -479,35 +533,53 @@ export default function Admin({ onLogout, onBack }) {
     return () => clearInterval(t);
   }, [refresh]);
 
+  // custom confirmation box (replaces window.confirm)
+  const [dialog, setDialog] = useState(null);
+
+  // returns a promise that resolves true (confirmed) or false (cancelled)
+  const ask = (opts) =>
+    new Promise((resolve) => setDialog({ ...opts, resolve }));
+
+  const closeDialog = (result) => {
+    dialog?.resolve(result);
+    setDialog(null);
+  };
+
   const wipe = async () => {
-    if (window.confirm("Delete ALL registrations and scores?")) {
+    const ok = await ask({
+      title: "Clear all data?",
+      message:
+        "This will delete ALL registrations and scores. This can't be undone.",
+      confirmText: "Delete all",
+    });
+    if (ok) {
       await clearPlayers();
       refresh();
     }
   };
 
   const removePlayers = async (list) => {
-    if (
-      !window.confirm(
-        `Delete ${list.length} registration${list.length > 1 ? "s" : ""} and their scores? This can't be undone.`,
-      )
-    )
-      return false;
-    const ok = await deletePlayers(list.map((p) => p.id));
+    const ok = await ask({
+      title: "Delete registrations?",
+      message: `Delete ${list.length} registration${list.length > 1 ? "s" : ""} and their scores? This can't be undone.`,
+      confirmText: "Delete",
+    });
+    if (!ok) return false;
+    const done = await deletePlayers(list.map((p) => p.id));
     refresh();
-    return ok;
+    return done;
   };
 
   const resetScores = async (list) => {
-    if (
-      !window.confirm(
-        `Clear scores for ${list.length} player${list.length > 1 ? "s" : ""}? Their registrations stay.`,
-      )
-    )
-      return false;
-    const ok = await clearScoresFor(list.map((p) => p.id));
+    const ok = await ask({
+      title: "Clear scores?",
+      message: `Clear scores for ${list.length} player${list.length > 1 ? "s" : ""}? Their registrations stay.`,
+      confirmText: "Clear scores",
+    });
+    if (!ok) return false;
+    const done = await clearScoresFor(list.map((p) => p.id));
     refresh();
-    return ok;
+    return done;
   };
 
   return (
@@ -566,6 +638,15 @@ export default function Admin({ onLogout, onBack }) {
           Clear all data
         </button>
       )}
+
+      <ConfirmDialog
+        open={!!dialog}
+        title={dialog?.title}
+        message={dialog?.message}
+        confirmText={dialog?.confirmText}
+        onConfirm={() => closeDialog(true)}
+        onCancel={() => closeDialog(false)}
+      />
     </div>
   );
 }
