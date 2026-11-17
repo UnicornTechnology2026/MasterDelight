@@ -6,7 +6,7 @@ import { shuffle } from "../lib/shuffle";
 
 // ---- Tunables -------------------------------------------------------------
 const IMG = { horse, tagline };
-const TIME = 25; // seconds per question
+const TIME = 10; // seconds per question
 const COUNT = 3; // questions per run
 const NEXT_DELAY = 1400; // ms the feedback stays on screen
 const POINTS = 10;

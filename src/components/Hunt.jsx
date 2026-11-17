@@ -3,7 +3,7 @@ import scene from "../assets/scene.jpg";
 import mini from "../assets/mini-bottle.png";
 import { HIDDEN } from "../data";
 
-const TIME = 15,
+const TIME = 10,
   N = HIDDEN.length;
 const RATIO = 1376 / 768; // width / height of scene.jpg
 const BOTTLE_W = 2.5; // hidden bottle width as % of scene width (raise to make the bottles bigger)
