@@ -54,12 +54,15 @@ export default function Final({ scores, onRestart, onCoupon }) {
   return (
     <div className="flex min-h-0 flex-1 overflow-y-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <style>{`
-        @keyframes md-fall{0%{transform:translateY(-12vh) rotate(0);opacity:1}85%{opacity:1}100%{transform:translateY(112vh) rotate(var(--spin));opacity:0}}
-        @keyframes md-bar{from{width:0}to{width:var(--w)}}
+        @keyframes md-burst{
+  0%{transform:translate(0,0) rotate(0) scale(.3);opacity:1;animation-timing-function:cubic-bezier(.1,.8,.3,1)}
+  35%{transform:translate(var(--dx),var(--dy)) rotate(calc(var(--spin)*.4)) scale(1);opacity:1;animation-timing-function:ease-in}
+  100%{transform:translate(calc(var(--dx)*1.1),calc(var(--dy) + 150px)) rotate(var(--spin)) scale(1);opacity:0}
+}
       `}</style>
 
       {/* Confetti (click Celebrate to fire it again) */}
-      <div
+      {/* <div
         key={`c${play}`}
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-40 overflow-hidden"
@@ -79,7 +82,7 @@ export default function Final({ scores, onRestart, onCoupon }) {
             }}
           />
         ))}
-      </div>
+      </div> */}
 
       {/* Gold frame */}
       <section className="m-auto w-full max-w-2xl animate-rise rounded-3xl bg-gradient-to-b from-[#fde9a6] via-gold to-[#a8680f] p-[2px] shadow-[0_18px_40px_rgba(0,0,0,.55),0_0_40px_rgba(245,184,46,.25)]">

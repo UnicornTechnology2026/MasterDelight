@@ -10,6 +10,7 @@ const toPlayer = (r) => ({
   scores: r.scores,
   done: r.done,
   plays: r.plays,
+  couponMl: r.coupon_ml ?? null,
   registeredAt: Date.parse(r.registered_at),
   updatedAt: Date.parse(r.updated_at),
 });
@@ -51,6 +52,20 @@ export async function saveLevel(id, key, score) {
     });
   } catch (e) {
     console.error("saveLevel:", e.message);
+  }
+}
+
+export async function claimCoupon(id) {
+  if (!id) return null;
+  try {
+    const r = await rest("rpc/claim_coupon", {
+      method: "POST",
+      body: { p_id: id },
+    });
+    return r ? { ml: r.ml, code: r.code } : null;
+  } catch (e) {
+    console.error("claimCoupon:", e.message);
+    return null;
   }
 }
 

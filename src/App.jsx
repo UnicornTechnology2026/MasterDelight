@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerPlayer, resetRun, saveLevel } from "./lib/store";
+import { claimCoupon, registerPlayer, resetRun, saveLevel } from "./lib/store";
 import Header from "./components/Header";
 import JumpMenu from "./components/JumpMenu";
 import Loader from "./components/Loader";
@@ -185,8 +185,11 @@ export default function App() {
           <Final
             scores={scores}
             onRestart={restart}
-            onCoupon={() => {
-              setCoupon((c) => c || makeCoupon());
+            onCoupon={async () => {
+              if (!coupon) {
+                // saved in the database; falls back to a local coupon if offline
+                setCoupon((await claimCoupon(playerId)) || makeCoupon());
+              }
               setScreen("coupon");
             }}
           />

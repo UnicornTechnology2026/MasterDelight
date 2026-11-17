@@ -35,6 +35,8 @@ const fmtDate = (t) =>
         minute: "2-digit",
       })
     : "—";
+
+const couponText = (p) => (p.couponMl ? `${p.couponMl} ML` : "");
 const status = (p) => {
   const n = doneCount(p);
   return n === 3 ? "Completed" : n === 0 ? "Not started" : "In progress";
@@ -279,7 +281,7 @@ function Registrations({ players, onDelete }) {
   const rows = [...players]
     .sort((a, b) => b.registeredAt - a.registeredAt)
     .filter((p) =>
-      `${p.name} ${p.city} ${p.mobile}`
+      `${p.name} ${p.city} ${p.mobile} ${couponText(p)}`
         .toLowerCase()
         .includes(q.trim().toLowerCase()),
     );
@@ -309,17 +311,18 @@ function Registrations({ players, onDelete }) {
             className="btn-ghost bg-black/30 !px-3 !py-1.5 text-sm"
             onClick={() =>
               download("registrations.csv", [
-                ["Name", "City", "Mobile", "Registered"],
+                ["Name", "City", "Mobile", , "Coupon won", "Registered"],
                 ...rows.map((p) => [
                   p.name,
                   p.city,
                   p.mobile,
+                  couponText(p),
                   new Date(p.registeredAt).toISOString(),
                 ]),
               ])
             }
           >
-            EXPORT CSV
+            EXPORT FILE
           </button>
         </div>
       </div>
@@ -335,6 +338,7 @@ function Registrations({ players, onDelete }) {
           "Name",
           "City",
           "Mobile",
+          "Coupon won",
           "Registered",
         ]}
       >
@@ -350,7 +354,24 @@ function Registrations({ players, onDelete }) {
             <td className={`${td} text-white/50`}>{i + 1}</td>
             <td className={td}>{p.name}</td>
             <td className={td}>{p.city}</td>
-            <td className={td}>+91 {p.mobile}</td>
+            <td className={td}>
+              <span
+                translate="no"
+                className="font-body font-normal normal-case tracking-normal text-white/90 no-underline"
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                +91 {p.mobile}
+              </span>
+            </td>
+            <td className={td}>
+              {p.couponMl ? (
+                <span className="font-display text-lg text-gold">
+                  {p.couponMl} ML
+                </span>
+              ) : (
+                <span className="text-white/35">—</span>
+              )}
+            </td>
             <td className={`${td} text-white/60`}>{fmtDate(p.registeredAt)}</td>
           </tr>
         ))}
@@ -392,7 +413,7 @@ function Scores({ players, onClear }) {
             ])
           }
         >
-          EXPORT CSV
+          EXPORT FILE
         </button>
       </div>
       <Table

@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import labelImg from "../assets/coupon-label.png";
 
-const REWARDS = [10, 20, 30, 40, 50, 60, 70, 80, 90]; // ml free
+const REWARDS = [30, 45, 60, 90]; // ml free
 
+// Local fallback only (used if the database can't be reached)
 export const makeCoupon = () => {
   const ml = REWARDS[Math.floor(Math.random() * REWARDS.length)];
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -97,90 +100,99 @@ function ScratchCard({ onReveal, children }) {
   );
 }
 
-const Crest = () => (
-  <svg
-    viewBox="0 0 60 60"
-    style={{ width: "100%", height: "100%" }}
-    aria-hidden="true"
-  >
-    <g fill="none" stroke="#f5c24a" strokeWidth="1.6">
-      <circle cx="30" cy="36" r="18" />
-      <circle cx="30" cy="36" r="13" strokeWidth="1" />
-      <path d="M22 10l4 5 4-6 4 6 4-5-2 8H24z" fill="#f5c24a" />
-      <path d="M10 18l12 12M50 18L38 30M22 54l-6 5M38 54l6 5" />
-    </g>
-    <path d="M30 26l7 10-7 10-7-10z" fill="#f5c24a" />
-  </svg>
-);
+const CONFETTI_COLORS = ["#f5c24a", "#fde9a6", "#e11d2e", "#ffffff", "#19b5c1"];
 
-// Label proportions copied from the bottle label image (290 x 572 px).
-// Every size inside uses cqw (% of the coupon's width), so it scales as one piece.
+// Confetti celebration: falls over the whole screen once, then removes itself
+function Confetti({ onDone }) {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 90 }, (_, i) => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 0.9,
+        dur: 2.2 + Math.random() * 2,
+        w: 6 + Math.random() * 7,
+        h: 8 + Math.random() * 10,
+        dx: (Math.random() - 0.5) * 220,
+        rot: 360 + Math.random() * 720,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      })),
+    [],
+  );
+
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    const t = setTimeout(() => done.current(), 5200);
+    return () => clearTimeout(t);
+  }, []);
+
+  return createPortal(
+    <div
+      aria-hidden="true"
+      className="md-confetti pointer-events-none fixed inset-0 z-[100] overflow-hidden"
+    >
+      <style>{`
+        @keyframes md-fall{0%{transform:translate3d(0,-12vh,0) rotate(0);opacity:1}100%{transform:translate3d(var(--dx),112vh,0) rotate(var(--rot));opacity:.9}}
+        @media (prefers-reduced-motion:reduce){.md-confetti{display:none}}
+      `}</style>
+      {pieces.map((c, i) => (
+        <span
+          key={i}
+          className="absolute top-0"
+          style={{
+            left: `${c.left}%`,
+            width: c.w,
+            height: c.h,
+            background: c.color,
+            borderRadius: 2,
+            "--dx": `${c.dx}px`,
+            "--rot": `${c.rot}deg`,
+            animation: `md-fall ${c.dur}s linear ${c.delay}s both`,
+          }}
+        />
+      ))}
+    </div>,
+    document.body,
+  );
+}
+
+// The bottle label is a single image (924 x 1702 source). The scratch card sits on
+// top of it, positioned in % of the label and sized in cqw (% of the label's width),
+// so it scales together with the label.
 export default function Coupon({ coupon, onBack }) {
   const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(coupon.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {}
-  };
-
-  const abs = (top, h, extra = {}) => ({
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: `${top}%`,
-    height: h ? `${h}%` : undefined,
-    ...extra,
-  });
+  // celebrate (confetti) as soon as the foil clears
+  useEffect(() => {
+    if (!shown) return;
+    const t = setTimeout(() => setCelebrate(true), 200);
+    return () => clearTimeout(t);
+  }, [shown]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden py-2">
       <div
-        className="animate-rise relative overflow-hidden rounded-md border-[3px] border-[#f5c24a] shadow-[0_18px_40px_rgba(0,0,0,.55),0_0_40px_rgba(245,184,46,.25)]"
+        className="animate-rise relative"
         style={{
-          aspectRatio: "290 / 572",
+          aspectRatio: "924 / 1702",
           height: "min(calc(100dvh - 9.5rem), 640px)",
           maxWidth: "100%",
           containerType: "inline-size",
-          background:
-            "repeating-linear-gradient(172deg,#c00805 0 2.4cqw,#a80402 2.4cqw 4.8cqw)",
+          filter: "drop-shadow(0 0 22px rgba(245,184,46,.28))",
         }}
       >
-        {/* MASTERS DELIGHT (label y 3%-27%) */}
-        <h1
-          className="text-center font-display uppercase text-[#fde9a6] drop-shadow"
-          style={{
-            ...abs(3.5),
-            fontSize: "21cqw",
-            lineHeight: 0.98,
-            letterSpacing: ".02em",
-          }}
-        >
-          Masters
-          <br />
-          Delight
-        </h1>
-        {/* PREMIUM WHISKY (y 28%-35%) */}
-        <p
-          className="text-center font-semibold text-[#f5c24a]"
-          style={{ ...abs(28.8), fontSize: "4.4cqw", letterSpacing: ".35em" }}
-        >
-          PREMIUM
-        </p>
-        <p
-          className="text-center font-display text-white"
-          style={{ ...abs(31.2), fontSize: "9.5cqw", letterSpacing: ".18em" }}
-        >
-          WHISKY
-        </p>
+        <img
+          src={labelImg}
+          alt="Masters Delight Premium Whisky label"
+          draggable={false}
+          className="absolute inset-0 h-full w-full select-none"
+        />
 
-        {/* Scratch card where the horse was (y 37%-62%) */}
+        {/* Scratch card in the empty red space (between WHISKY and the crest) */}
         <div
           className="absolute rounded-xl border-2 border-[#f5c24a] bg-black/25 p-[1.2cqw]"
-          style={{ left: "13%", right: "13%", top: "38%", height: "25%" }}
+          style={{ left: "12%", right: "12%", top: "38.5%", height: "24.5%" }}
         >
           <ScratchCard onReveal={() => setShown(true)}>
             <div className="flex h-full flex-col items-center justify-center bg-gradient-to-b from-[#fff1b8] to-[#f5b82e] text-maroon">
@@ -206,94 +218,10 @@ export default function Coupon({ coupon, onBack }) {
             </div>
           </ScratchCard>
         </div>
-
-        {/* SMOOTH [crest] BLEND (y 64%-82%) */}
-        <p
-          className="absolute text-white/95"
-          style={{
-            left: "5%",
-            top: "71%",
-            fontSize: "3.6cqw",
-            letterSpacing: ".3em",
-          }}
-        >
-          SMOOTH
-        </p>
-        <p
-          className="absolute text-white/95"
-          style={{
-            right: "5%",
-            top: "71%",
-            fontSize: "3.6cqw",
-            letterSpacing: ".3em",
-          }}
-        >
-          BLEND
-        </p>
-        <div
-          className="absolute z-10"
-          style={{
-            left: "50%",
-            top: "64.5%",
-            width: "24cqw",
-            height: "17cqw",
-            transform: "translateX(-50%)",
-          }}
-        >
-          <Crest />
-        </div>
-
-        {/* Teal band (y 74% - 100%) */}
-        <div
-          className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-[#02666f] text-center"
-          style={{ top: "74%", padding: "0 5cqw", paddingTop: "6cqw" }}
-        >
-          {shown ? (
-            <div className="animate-pop">
-              <p
-                className="uppercase text-[#fde9a6]"
-                style={{ fontSize: "3.6cqw", letterSpacing: ".25em" }}
-              >
-                Delight Coupon Code
-              </p>
-              <button
-                onClick={copy}
-                className="rounded-lg border-2 border-dashed border-[#fde9a6] bg-black/25 font-display text-white"
-                style={{
-                  marginTop: "1.5cqw",
-                  padding: "1.5cqw 4cqw",
-                  fontSize: "8cqw",
-                  letterSpacing: ".12em",
-                }}
-              >
-                {coupon.code}
-              </button>
-              <p
-                className="text-white/80"
-                style={{ marginTop: "1.5cqw", fontSize: "3.2cqw" }}
-              >
-                {copied ? "Copied!" : "Tap code to copy · show it at the bar"}
-              </p>
-            </div>
-          ) : (
-            <p
-              className="font-semibold uppercase text-white"
-              style={{
-                fontSize: "3.9cqw",
-                lineHeight: 1.7,
-                letterSpacing: ".16em",
-              }}
-            >
-              A delightfully smooth blend of imported Scotch malts and select
-              Indian malts with grain spirit
-            </p>
-          )}
-        </div>
       </div>
 
-      <button className="btn-ghost bg-black/30 !py-1" onClick={onBack}>
-        ← Back to score
-      </button>
+      {celebrate && <Confetti onDone={() => setCelebrate(false)} />}
+
       <p className="text-center text-[10px] opacity-60">
         Please drink responsibly. For adults of legal drinking age only.
       </p>
