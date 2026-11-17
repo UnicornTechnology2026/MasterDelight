@@ -159,7 +159,7 @@ function Confetti({ onDone }) {
 // The bottle label is a single image (924 x 1702 source). The scratch card sits on
 // top of it, positioned in % of the label and sized in cqw (% of the label's width),
 // so it scales together with the label.
-export default function Coupon({ coupon, onBack }) {
+export default function Coupon({ coupon }) {
   const [shown, setShown] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
 
