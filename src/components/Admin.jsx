@@ -326,12 +326,6 @@ function Registrations({ players, onDelete }) {
                     width: 14,
                     align: "center",
                   },
-                  {
-                    header: "Registered On",
-                    key: "registeredAt",
-                    width: 22,
-                    type: "date",
-                  },
                 ],
                 rows: rows.map((p, i) => ({
                   sno: i + 1,
@@ -339,7 +333,6 @@ function Registrations({ players, onDelete }) {
                   city: p.city,
                   mobile: `+91 ${p.mobile}`,
                   coupon: couponText(p) || "—",
-                  registeredAt: new Date(p.registeredAt),
                 })),
               })
             }
@@ -361,7 +354,6 @@ function Registrations({ players, onDelete }) {
           "City",
           "Mobile",
           "Coupon won",
-          "Registered",
         ]}
       >
         {rows.map((p, i) => (
@@ -394,7 +386,6 @@ function Registrations({ players, onDelete }) {
                 <span className="text-white/35">—</span>
               )}
             </td>
-            <td className={`${td} text-white/60`}>{fmtDate(p.registeredAt)}</td>
           </tr>
         ))}
       </Table>
