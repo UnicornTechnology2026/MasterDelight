@@ -7,16 +7,19 @@ const ROW_TONE = {
   2: "border-slate-300/70 bg-slate-200/10",
   3: "border-amber-600/80 bg-amber-700/20",
 };
+const PAGE_SIZE = 6;
 
 export default function Leaderboard({ playerId, onClose }) {
   const [rows, setRows] = useState(null); // null = loading
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(0);
 
   const load = useCallback(async () => {
     setRows(null);
     setError(false);
+    setPage(0);
     try {
-      setRows(await getLeaderboard(50));
+      setRows(await getLeaderboard(1000));
     } catch (e) {
       console.error("getLeaderboard:", e.message);
       setError(true);
@@ -40,6 +43,11 @@ export default function Leaderboard({ playerId, onClose }) {
   }, [onClose]);
 
   const me = rows?.find((r) => r.id === playerId);
+
+  const totalPages = rows ? Math.max(1, Math.ceil(rows.length / PAGE_SIZE)) : 1;
+  const pageRows = rows
+    ? rows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
+    : [];
 
   return (
     <div
@@ -117,7 +125,7 @@ export default function Leaderboard({ playerId, onClose }) {
 
           {rows && rows.length > 0 && (
             <ol className="space-y-2">
-              {rows.map((r) => {
+              {pageRows.map((r) => {
                 const mine = r.id === playerId;
                 return (
                   <li
@@ -156,14 +164,38 @@ export default function Leaderboard({ playerId, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-center border-t border-gold/25 px-5 py-3">
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 border-t border-gold/25 px-5 py-3">
           <button
             type="button"
-            onClick={load}
-            disabled={rows === null && !error}
-            className="btn-ghost !px-4 !py-1.5 text-sm disabled:opacity-40"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={!rows || page === 0}
+            className="btn-ghost !px-3 !py-1.5 text-sm disabled:opacity-40"
           >
-            ⟳ REFRESH
+            ‹ PREV
+          </button>
+
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-xs text-white/70">
+              Page {page + 1} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={load}
+              disabled={rows === null && !error}
+              className="text-[11px] text-gold/80 underline disabled:opacity-40"
+            >
+              ⟳ Refresh
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={!rows || page >= totalPages - 1}
+            className="btn-ghost !px-3 !py-1.5 text-sm disabled:opacity-40"
+          >
+            NEXT ›
           </button>
         </div>
       </div>
